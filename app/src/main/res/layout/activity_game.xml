@@ -13,6 +13,6 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="커밋되나?" />
+        android:text="커밋되나123?" />
 
 </LinearLayout>

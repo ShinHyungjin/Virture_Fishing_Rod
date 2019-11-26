@@ -13,6 +13,6 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="게임화면 만들거임" />
+        android:text="커밋되나?" />
 
 </LinearLayout>

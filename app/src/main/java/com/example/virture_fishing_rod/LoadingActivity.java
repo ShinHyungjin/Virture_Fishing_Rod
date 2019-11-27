@@ -3,6 +3,7 @@ package com.example.virture_fishing_rod;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
@@ -16,6 +17,7 @@ import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 public class LoadingActivity extends AppCompatActivity {
     Intent intent;
     Button bt;
+    MediaPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +26,9 @@ public class LoadingActivity extends AppCompatActivity {
         //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_loading);
         bt = findViewById(R.id.button2);
+        player = MediaPlayer.create(this,R.raw.entire);
+        player.setLooping(true);
+        player.start();
 
         intent = new Intent(LoadingActivity.this, GameActivity.class);
         bt.setOnClickListener(new View.OnClickListener() {

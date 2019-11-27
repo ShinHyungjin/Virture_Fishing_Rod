@@ -13,6 +13,6 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="호우" />
+        android:text="폰트추가함" />
 
 </LinearLayout>

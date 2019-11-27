@@ -39,7 +39,6 @@ public class LoadingActivity extends AppCompatActivity {
             }
         });
 
-
         ImageView s = findViewById(R.id.iv);
         GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
         Glide.with(this).load(R.drawable.loading).into(gif);

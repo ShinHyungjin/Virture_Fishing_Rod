@@ -16,7 +16,7 @@ import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 
 public class LoadingActivity extends AppCompatActivity {
     Intent intent;
-    Button bt;
+    ImageView bt;
     MediaPlayer player;
 
     @Override

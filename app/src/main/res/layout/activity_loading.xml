@@ -15,7 +15,7 @@
             android:scaleType="fitXY" />
 
         <LinearLayout
-            android:layout_width="200dp"
+            android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_centerInParent="true"
@@ -26,8 +26,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Virture"
-                    android:textSize="35dp"
+                    android:textSize="70dp"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#D5D5D5"
                     android:gravity="center"
+                    android:fontFamily="@font/dunggeunmo"
                     android:textStyle="bold"/>
 
                 <TextView
@@ -35,8 +38,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Fishing"
-                    android:textSize="35dp"
+                    android:textSize="70dp"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#f3f3f3"
                     android:gravity="center"
+                    android:fontFamily="@font/dunggeunmo"
                     android:textStyle="bold"/>
 
                 <TextView
@@ -44,8 +50,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Rod"
-                    android:textSize="35dp"
+                    android:textSize="70dp"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#f3f3f3"
                     android:gravity="center"
+                    android:fontFamily="@font/dunggeunmo"
                     android:textStyle="bold"/>
 
                 <Button
@@ -56,6 +65,7 @@
                     android:text="게임시작"
                     android:textSize="25dp"
                     android:textStyle="bold"
+                    android:fontFamily="@font/dunggeunmo"
                     android:layout_gravity="center"/>
 
         </LinearLayout>

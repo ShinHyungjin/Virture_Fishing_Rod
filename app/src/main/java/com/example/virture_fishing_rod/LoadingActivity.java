@@ -35,6 +35,7 @@ public class LoadingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(intent);
+                player.stop();
             }
         });
 

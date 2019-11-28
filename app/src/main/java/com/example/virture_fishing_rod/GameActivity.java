@@ -56,7 +56,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         new WorkerThread().start();
 
         GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-        if(wether == "비")
+        if(wether == "비" || wether == "눈")
             Glide.with(this).load(R.drawable.raining).into(gif);
         else
             Glide.with(this).load(R.drawable.ocean).into(gif);

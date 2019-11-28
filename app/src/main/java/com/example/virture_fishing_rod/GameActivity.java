@@ -1,5 +1,6 @@
 package com.example.virture_fishing_rod;
 
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -12,6 +13,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -19,11 +22,23 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import java.net.URL;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 public class GameActivity extends AppCompatActivity implements SensorEventListener {
     MediaPlayer player;
     Intent intent;
     SensorManager m; Sensor sen; ImageView rod1,rod2,rod3;
     SQLiteDatabase db;
+    String Wonju = "", wether = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,8 +53,13 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
 
+        new WorkerThread().start();
+
         GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-        Glide.with(this).load(R.drawable.ocean).into(gif);
+        if(wether == "비")
+            Glide.with(this).load(R.drawable.raining).into(gif);
+        else
+            Glide.with(this).load(R.drawable.ocean).into(gif);
         GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1);
         Glide.with(this).load(R.drawable.exrod).into(png1);
         GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
@@ -71,6 +91,26 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     " 오메가-3 지방산이 많은 생선으로 유명하다." + "')");
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "대구" + "','" + "먹성이 대단한 포식성 어류로서, 입과 머리가 크다 해서 ㅁㅁ로 불리우는 한류성 어종이다." +
                     "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
+        }
+    }
+
+    class WorkerThread extends Thread {
+        public void run() {
+            try {
+                URL url = new URL("https://www.kma.go.kr/XML/weather/sfc_web_map.xml");
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                Document doc = db.parse(new InputSource(url.openStream()));
+                doc.getDocumentElement().normalize();
+                NodeList nodeList = doc.getElementsByTagName("local");
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    NodeList childNodeList = node.getChildNodes();
+                    Wonju = node.getFirstChild().getNodeValue();
+                    if(Wonju == "원주")
+                        wether =((Element)node).getAttribute("desc");
+                }
+            } catch (Exception e) { }
         }
     }
 

@@ -60,7 +60,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         h = new Handler() {
             public void handleMessage(Message msg) {
-                        HTMLParsing();
+                HTMLParsing();
             }
         };
         a = new WorkerThread(h);
@@ -68,7 +68,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         m = (SensorManager) getSystemService(SENSOR_SERVICE);
         sen = m.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        if(s==null){
+        if(sen==null){
             Toast.makeText(this,"방향센서 없음->프로그램 종료",Toast.LENGTH_LONG).show();
             finish();
         }

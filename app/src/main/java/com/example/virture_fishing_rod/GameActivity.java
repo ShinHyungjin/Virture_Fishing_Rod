@@ -57,6 +57,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod1 = findViewById(R.id.iv3);
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
+
         h = new Handler() {
             public void handleMessage(Message msg) {
                         HTMLParsing();
@@ -100,13 +101,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 Glide.with(this).load(R.drawable.ocean).into(gif);
             GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1);
             Glide.with(this).load(R.drawable.exrod).into(png1);
-            GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
-            Glide.with(this).load(R.drawable.exrod).into(png2);
-            GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
-            Glide.with(this).load(R.drawable.exrod).into(png3);
 
-            rod2.setVisibility(View.INVISIBLE);
-            rod3.setVisibility(View.INVISIBLE);
         } catch (Exception e) { Toast.makeText(getApplicationContext(), "파싱에러",Toast.LENGTH_SHORT).show(); }
     }
 
@@ -157,10 +152,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         if (event.sensor.getType() == Sensor.TYPE_ORIENTATION){
             float roll = event.values[2];
             if(roll >= 20) {
+                GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
+                Glide.with(this).load(R.drawable.exrod).into(png2);
                 rod2.setVisibility(View.VISIBLE);
                 rod1.setVisibility(View.INVISIBLE);
                 rod3.setVisibility(View.INVISIBLE);
             }else if(roll<-20){
+                GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
+                Glide.with(this).load(R.drawable.exrod).into(png3);
                 rod3.setVisibility(View.VISIBLE);
                 rod1.setVisibility(View.INVISIBLE);
                 rod2.setVisibility(View.INVISIBLE);

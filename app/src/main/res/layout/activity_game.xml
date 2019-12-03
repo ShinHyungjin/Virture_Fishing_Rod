@@ -69,11 +69,9 @@
         android:id="@+id/answer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:text="맞은 문제 수 : 0"
         android:textColor="#f3f3f3"
-        android:textStyle="bold"
-        android:fontFamily="@font/dunggeunmo"
-        />
+        android:textSize="20dp"
+        android:layout_margin="5dp"
+        android:fontFamily="@font/dunggeunmo"/>
 
 </RelativeLayout>

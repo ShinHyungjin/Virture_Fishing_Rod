@@ -20,6 +20,7 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +54,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     WorkerThread a;
     ImageView s;
     TextView quiz;
+    RelativeLayout quiz_back;
     long old=0;
     int count=0;
     boolean flag = false;
@@ -65,7 +67,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     int check;
     int query = rand.nextInt(5);
     Cursor c;
-    String info, fishname;
+    String info="<문제> \n\n", fishname;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +88,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod3 = findViewById(R.id.iv5);
         bupyo = findViewById(R.id.iv6);
         quiz = findViewById(R.id.quiz);
+        quiz_back = findViewById(R.id.quiz_back);
 
         h = new Handler() {
             public void handleMessage(Message msg) {
@@ -163,16 +166,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
         quiz.setVisibility(View.INVISIBLE);
         bupyo.setVisibility(View.INVISIBLE);
-        player.start();
+        quiz_back.setVisibility(View.INVISIBLE);
     }
 
     private void getfish() {
         Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
         quiz.setVisibility(View.VISIBLE);
+        quiz_back.setVisibility(View.VISIBLE);
 
         c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 ",null);
         c.moveToPosition(query);
-        info = c.getString(0);
+        info += c.getString(0);
         fishname = c.getString(1);
 
         quiz.setText(info);

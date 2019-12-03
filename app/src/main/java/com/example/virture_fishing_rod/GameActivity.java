@@ -47,6 +47,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     boolean flag = false;
     boolean rodcheck[] = new boolean[3];
     boolean isroding = false;
+    boolean isfishing = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -202,8 +203,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             long gap = (time - old);
             if(gap > 500) {
                 old = time;
-                flag = false;
-                if (value > 200 && flag == false) {
+                if (value > 200 && flag == false && isfishing == false) {
                     bupyo.setVisibility(View.INVISIBLE);
                     for (int i = 0; i < 3; i++) {
                         if (rodcheck[i] == true && i == 0) {
@@ -220,13 +220,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     flag = true;
                     isroding = true;
                 }
-                if (value > 400 && flag == true) {
+                else if (value > 400 && flag == true) {
                     GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);
                     Glide.with(this).load(R.drawable.bupyo1).into(bupyo1);
                     bupyo.setVisibility(View.VISIBLE);
                     rod1.setRotation(0.0f);
                     rod2.setRotation(0.0f);
                     rod3.setRotation(0.0f);
+                    isfishing = true;
                 }
             }
         }

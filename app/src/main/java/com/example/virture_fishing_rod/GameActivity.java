@@ -1,9 +1,11 @@
 package com.example.virture_fishing_rod;
 
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.Sensor;
@@ -16,6 +18,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -44,6 +47,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Handler h,h2;
     WorkerThread a;
     ImageView s;
+    TextView quiz;
     long old=0;
     int count=0;
     boolean flag = false;
@@ -53,6 +57,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Thread t = null;
     Random rand = new Random();
     int check;
+    int query = rand.nextInt(5);
+    Cursor c;
+    String info, fishname;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +77,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
         bupyo = findViewById(R.id.iv6);
+        quiz = findViewById(R.id.quiz);
 
         h = new Handler() {
             public void handleMessage(Message msg) {
@@ -96,23 +104,40 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         if(db == null) {
             db = helper.getWritableDatabase();
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "가다랑어" + "','" + "고등어과의 어류 가운데 소형 종에 속한다. 몸은 굵고 통통한 방추형임" +
-                    " 등은 청흑색, 배는 광택을 띤 은백색이고 그 위에 4~10줄의 검은 세로띠가 있는 것이 특징이다." + "')");
+                    " 등은 청흑색, 배는 광택을 띤 은백색이고 그 위에 4~10줄의 검은 세로띠가 있는 것이 특징이다." + "','" + 0 + "')");
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "갈치" + "','" + "광택이 나는 은백색을 띠며 등지느러미는 연한 황록색을 띤다." +
-                    " 눈이 머리에 비해 큰 편이며, 입 또한 크다. " + "칼치 또는 도어 라고도 한다" + "')");
+                    " 눈이 머리에 비해 큰 편이며, 입 또한 크다. " + "칼치 또는 도어 라고도 한다" + "','" + 1 + "')");
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "감성돔" + "','" + "지느러미가 크게 발달되어 있으먀, 갑각류나 패류 등 작은 수생물을 포식한다." +
-                    " 참돔에 비하면 성장속도가 느리며, 우리나라 근해, 일본의 북해 등 널리 분포하며 서식한다." + "')");
+                    " 참돔에 비하면 성장속도가 느리며, 우리나라 근해, 일본의 북해 등 널리 분포하며 서식한다." + "','" + 2 + "')");
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "고등어" + "','" + "가을철에 맛이 제일 좋으며, 연해에 분포되어 비교적 많이 잡히는 생선이다." +
-                    " 오메가-3 지방산이 많은 생선으로 유명하다." + "')");
+                    " 오메가-3 지방산이 많은 생선으로 유명하다." + "','" + 3 + "')");
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "대구" + "','" + "먹성이 대단한 포식성 어류로서, 입과 머리가 크다 해서 ㅁㅁ로 불리우는 한류성 어종이다." +
-                    "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
+                    "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "','" + 4 + "')");
         }
         check = rand.nextInt(6)+10;
     }
     private void getfish() {
-        Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
-        isfishing = false;
-        flag = false;
-        isroding = false;
+        quiz.setVisibility(View.VISIBLE);
+        //Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
+        c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 WHERE 넘버= '" + query + "';",null);
+        c.moveToNext();
+        info = c.getString(0);
+        fishname = c.getString(1);
+
+        quiz.setText(info);
+
+        quiz.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        // 나중에 다 초기화
+        // isfishing = false;
+        // flag = false;
+        // isroding = false;
+        // query = rand.nextInt(5);
     }
     void HTMLParsing() {
         try {
@@ -157,7 +182,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
 
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE 물고기 (이름 TEXT, 정보 TEXT);");
+            db.execSQL("CREATE TABLE 물고기 (이름 TEXT, 정보 TEXT, 넘버 NUMBER);");
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

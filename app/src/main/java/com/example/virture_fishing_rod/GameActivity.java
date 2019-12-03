@@ -28,6 +28,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -39,6 +41,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     SensorManager m; Sensor sen; ImageView rod1,rod2,rod3;
     SQLiteDatabase db;
     String Wonju = "", wether = "";
+    Handler h;
+    WorkerThread a;
+    ImageView s;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,27 +53,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         player.setLooping(true);
         player.start();
 
-        ImageView s = findViewById(R.id.iv2);
+        s = findViewById(R.id.iv2);
         rod1 = findViewById(R.id.iv3);
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
-
-        new WorkerThread().start();
-
-        GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-        if(wether == "비" || wether == "눈")
-            Glide.with(this).load(R.drawable.raining).into(gif);
-        else
-            Glide.with(this).load(R.drawable.ocean).into(gif);
-        GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1);
-        Glide.with(this).load(R.drawable.exrod).into(png1);
-        GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
-        Glide.with(this).load(R.drawable.exrod).into(png2);
-        GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
-        Glide.with(this).load(R.drawable.exrod).into(png3);
-
-        rod2.setVisibility(View.INVISIBLE);
-        rod3.setVisibility(View.INVISIBLE);
+        h = new Handler() {
+            public void handleMessage(Message msg) {
+                        HTMLParsing();
+            }
+        };
+        a = new WorkerThread(h);
+        a.start();
 
         m = (SensorManager) getSystemService(SENSOR_SERVICE);
         sen = m.getDefaultSensor(Sensor.TYPE_ORIENTATION);
@@ -93,24 +88,46 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
         }
     }
+    void HTMLParsing() {
+        try {
+            int start = wether.indexOf("class=\"main\"");
+            int end = wether.indexOf("어제보다");
+            wether = wether.substring(start + 13, end-2);
+            GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
+            if(wether.equals("맑음") || wether.equals("눈"))
+                Glide.with(this).load(R.drawable.raining).into(gif);
+            else
+                Glide.with(this).load(R.drawable.ocean).into(gif);
+            GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1);
+            Glide.with(this).load(R.drawable.exrod).into(png1);
+            GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
+            Glide.with(this).load(R.drawable.exrod).into(png2);
+            GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
+            Glide.with(this).load(R.drawable.exrod).into(png3);
+
+            rod2.setVisibility(View.INVISIBLE);
+            rod3.setVisibility(View.INVISIBLE);
+        } catch (Exception e) { Toast.makeText(getApplicationContext(), "파싱에러",Toast.LENGTH_SHORT).show(); }
+    }
 
     class WorkerThread extends Thread {
+        Handler h;
+        WorkerThread(Handler h) {
+            this.h = h;
+        }
         public void run() {
             try {
-                URL url = new URL("https://www.kma.go.kr/XML/weather/sfc_web_map.xml");
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-                Document doc = db.parse(new InputSource(url.openStream()));
-                doc.getDocumentElement().normalize();
-                NodeList nodeList = doc.getElementsByTagName("local");
-                for (int i = 0; i < nodeList.getLength(); i++) {
-                    Node node = nodeList.item(i);
-                    NodeList childNodeList = node.getChildNodes();
-                    Wonju = node.getFirstChild().getNodeValue();
-                    if(Wonju == "원주")
-                        wether =((Element)node).getAttribute("desc");
-                }
-            } catch (Exception e) { }
+                URL url = new URL("https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EC%9B%90%EC%A3%BC%EB%82%A0%EC%94%A8");
+                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+                while ((Wonju = in.readLine()) != null)
+                    if (Wonju.contains("어제보다")) {
+                        wether += Wonju;
+                        break;
+                    }
+                in.close();
+                h.sendMessage(new Message());
+            } catch (Exception e) {
+            }
         }
     }
 

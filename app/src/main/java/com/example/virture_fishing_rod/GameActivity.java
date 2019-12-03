@@ -186,7 +186,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                old = time;*/
                 if(value > 200) {
                     GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);
-                    Glide.with(this).load(R.drawable.bupyo).into(bupyo1);
+                    Glide.with(this).load(R.drawable.bupyo1).into(bupyo1);
                     bupyo.setVisibility(View.VISIBLE);
             }
         }

@@ -1,6 +1,5 @@
 package com.example.virture_fishing_rod;
 
-import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -44,6 +43,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Handler h;
     WorkerThread a;
     ImageView s;
+    long old=0;
+    boolean flag = false;
+    boolean rodcheck[] = new boolean[3];
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +54,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         player = MediaPlayer.create(this,R.raw.splash02);
         player.setLooping(true);
         player.start();
+
+        for(int i=0; i<3; i++)
+            rodcheck[i] = false;
 
         s = findViewById(R.id.iv2);
         rod1 = findViewById(R.id.iv3);
@@ -163,16 +168,26 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 rod2.setVisibility(View.VISIBLE);
                 rod1.setVisibility(View.INVISIBLE);
                 rod3.setVisibility(View.INVISIBLE);
+                rodcheck[0] = false;
+                rodcheck[1] = true;
+                rodcheck[2] = false;
             }else if(roll<-20){
                 GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
                 Glide.with(this).load(R.drawable.exrod).into(png3);
                 rod3.setVisibility(View.VISIBLE);
                 rod1.setVisibility(View.INVISIBLE);
                 rod2.setVisibility(View.INVISIBLE);
+                rodcheck[0] = false;
+                rodcheck[1] = false;
+                rodcheck[2] = true;
+
             }else{
                 rod1.setVisibility(View.VISIBLE);
                 rod2.setVisibility(View.INVISIBLE);
                 rod3.setVisibility(View.INVISIBLE);
+                rodcheck[0] = true;
+                rodcheck[1] = false;
+                rodcheck[2] = false;
             }
             rod1.invalidate();
             rod2.invalidate();
@@ -180,14 +195,35 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
         else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float value = (event.values[0]*event.values[0]) + (event.values[1]*event.values[1]) + (event.values[2]*event.values[2]);
-            /*long time = System.currentTimeMillis();
+            long time = System.currentTimeMillis();
             long gap = (time - old);
-            if(gap > 1000) {
-               old = time;*/
-                if(value > 200) {
+            if(gap > 500) {
+                old = time;
+                flag = false;
+                if (value > 200 && flag == false) {
+                    bupyo.setVisibility(View.INVISIBLE);
+                    for (int i = 0; i < 3; i++) {
+                        if (rodcheck[i] == true && i == 0) {
+                            rod1.setRotation(30.0f);
+                            break;
+                        } else if (rodcheck[i] == true && i == 1) {
+                            rod2.setRotation(30.0f);
+                            break;
+                        } else if (rodcheck[i] == true && i == 2) {
+                            rod3.setRotation(30.0f);
+                            break;
+                        }
+                    }
+                    flag = true;
+                }
+                if (value > 400 && flag == true) {
                     GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);
                     Glide.with(this).load(R.drawable.bupyo1).into(bupyo1);
                     bupyo.setVisibility(View.VISIBLE);
+                    rod1.setRotation(0.0f);
+                    rod2.setRotation(0.0f);
+                    rod3.setRotation(0.0f);
+                }
             }
         }
     }

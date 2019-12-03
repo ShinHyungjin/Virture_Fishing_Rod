@@ -30,6 +30,7 @@ import org.xml.sax.InputSource;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,14 +41,18 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo;
     SQLiteDatabase db;
     String Wonju = "", wether = "";
-    Handler h;
+    Handler h,h2;
     WorkerThread a;
     ImageView s;
     long old=0;
+    int count=0;
     boolean flag = false;
     boolean rodcheck[] = new boolean[3];
     boolean isroding = false;
     boolean isfishing = false;
+    Thread t = null;
+    Random rand = new Random();
+    int check;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +106,13 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "대구" + "','" + "먹성이 대단한 포식성 어류로서, 입과 머리가 크다 해서 ㅁㅁ로 불리우는 한류성 어종이다." +
                     "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
         }
+        check = rand.nextInt(6)+10;
+    }
+    private void getfish() {
+        Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
+        isfishing = false;
+        flag = false;
+        isroding = false;
     }
     void HTMLParsing() {
         try {
@@ -217,6 +229,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                             break;
                         }
                     }
+                    count=0;
                     flag = true;
                     isroding = true;
                 }
@@ -228,8 +241,34 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     rod2.setRotation(0.0f);
                     rod3.setRotation(0.0f);
                     isfishing = true;
+
+                    t = new Thread(new t());
+                    t.start();
+
+                    h2 = new Handler() {
+                        public void handleMessage(Message msg) {
+                            int sec = msg.arg1;
+                            if(sec == check) {
+                                getfish();
+                            }
+                        }
+                    };
                 }
             }
         }
     }
-}
+    class t implements Runnable {
+        public void run() {
+            while(isfishing) {
+                try {
+                    Thread.sleep(1000);   // 0.01초
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                    Message msg = new Message();
+                    msg.arg1 = count++;
+                    h2.sendMessage(msg);
+                }
+            }
+        }
+    }

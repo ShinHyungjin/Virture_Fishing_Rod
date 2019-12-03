@@ -1,9 +1,11 @@
 package com.example.virture_fishing_rod;
 
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.Sensor;
@@ -14,8 +16,12 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -30,31 +36,49 @@ import org.xml.sax.InputSource;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class GameActivity extends AppCompatActivity implements SensorEventListener {
+public class GameActivity extends AppCompatActivity implements SensorEventListener, TextToSpeech.OnInitListener {
+    TextToSpeech tts;
     MediaPlayer player;
-    Intent intent;
+    Intent intent, intent2;
     SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo;
     SQLiteDatabase db;
     String Wonju = "", wether = "";
-    Handler h;
+    Handler h,h2;
     WorkerThread a;
     ImageView s;
+    TextView quiz, answer;
+    RelativeLayout quiz_back;
     long old=0;
+    int count=0;
     boolean flag = false;
     boolean rodcheck[] = new boolean[3];
     boolean isroding = false;
     boolean isfishing = false;
+    Locale locale;
+    Thread t = null;
+    Random rand = new Random();
+    int check;
+    int query = rand.nextInt(5);
+    Cursor c;
+    String info="<문제> \n\n", fishname;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        tts = new TextToSpeech(this,this);
+
         player = MediaPlayer.create(this,R.raw.splash02);
         player.setLooping(true);
+        player.setVolume(0.2f,0.2f);
         player.start();
 
         for(int i=0; i<3; i++)
@@ -65,6 +89,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
         bupyo = findViewById(R.id.iv6);
+        quiz = findViewById(R.id.quiz);
+        quiz_back = findViewById(R.id.quiz_back);
+        answer = findViewById(R.id.answer);
 
         h = new Handler() {
             public void handleMessage(Message msg) {
@@ -88,6 +115,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         m2.registerListener(this,sen2,SensorManager.SENSOR_DELAY_UI);
 
         dbHelper helper = new dbHelper(this);
+
         if(db == null) {
             db = helper.getWritableDatabase();
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "가다랑어" + "','" + "고등어과의 어류 가운데 소형 종에 속한다. 몸은 굵고 통통한 방추형임" +
@@ -101,6 +129,82 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "대구" + "','" + "먹성이 대단한 포식성 어류로서, 입과 머리가 크다 해서 ㅁㅁ로 불리우는 한류성 어종이다." +
                     "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
         }
+        check = rand.nextInt(6)+10;
+    }
+
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS)
+        {
+            locale = Locale.getDefault();
+            if(tts.isLanguageAvailable(locale) >= TextToSpeech.LANG_AVAILABLE)
+                tts.setLanguage(locale);
+            else
+                Toast.makeText(this, "지원하지 않는 언어 오류", Toast.LENGTH_SHORT).show();
+        }
+        else if( status == TextToSpeech.ERROR) {
+            Toast.makeText(this, "음성 합성 초기화 오류", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        if(tts != null)
+            tts.shutdown();
+    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        try {
+            if (requestCode == 0 && resultCode == RESULT_OK) {
+                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String str = result.get(0);
+                if (str.length() > 0 && str.equals(fishname)) {
+                    if (tts.isSpeaking())
+                        tts.stop();
+                    tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);
+                }
+                else {
+                    tts.speak("오답입니다! 정답은 " + fishname+ " 입니다.", TextToSpeech.QUEUE_FLUSH, null);
+                }
+            }
+        } catch (Exception e) {
+        }
+        quiz.setVisibility(View.INVISIBLE);
+        bupyo.setVisibility(View.INVISIBLE);
+        quiz_back.setVisibility(View.INVISIBLE);
+    }
+
+    private void getfish() {
+        Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
+        quiz.setVisibility(View.VISIBLE);
+        quiz_back.setVisibility(View.VISIBLE);
+        info = "<문제>\n\n";
+
+        c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 ",null);
+        c.moveToPosition(query);
+        info += c.getString(0);
+        fishname = c.getString(1);
+
+        quiz.setText(info);
+
+        quiz.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    //player.pause();
+                    intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    startActivityForResult(intent2, 0);
+                } catch (Exception e)  {
+                    Toast.makeText(getApplicationContext(), "구글 앱이 설치되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // 나중에 다 초기화
+        isfishing = false;
+        flag = false;
+        isroding = false;
+        count = 0;
+        query = rand.nextInt(5);
+        check = rand.nextInt(6)+10;
     }
     void HTMLParsing() {
         try {
@@ -217,6 +321,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                             break;
                         }
                     }
+                    count=0;
                     flag = true;
                     isroding = true;
                 }
@@ -228,7 +333,33 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     rod2.setRotation(0.0f);
                     rod3.setRotation(0.0f);
                     isfishing = true;
+
+                    t = new Thread(new t());
+                    t.start();
+
+                    h2 = new Handler() {
+                        public void handleMessage(Message msg) {
+                            int sec = msg.arg1;
+                            if(sec == check) {
+                                getfish();
+                            }
+                        }
+                    };
                 }
+            }
+        }
+    }
+    class t implements Runnable {
+        public void run() {
+            while(isfishing) {
+                try {
+                    Thread.sleep(1000);   // 0.01초
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Message msg = new Message();
+                msg.arg1 = count++;
+                h2.sendMessage(msg);
             }
         }
     }

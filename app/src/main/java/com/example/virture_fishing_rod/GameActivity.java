@@ -37,6 +37,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
 
@@ -44,39 +45,40 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class GameActivity extends AppCompatActivity implements SensorEventListener, TextToSpeech.OnInitListener {
-    TextToSpeech tts;
-    MediaPlayer player;
-    Intent intent, intent2;
-    SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo;
-    SQLiteDatabase db;
-    String Wonju = "", wether = "";
-    Handler h,h2;
-    WorkerThread a;
-    ImageView s;
-    TextView quiz;
-    RelativeLayout quiz_back;
-    long old=0;
-    int count=0;
-    boolean flag = false;
-    boolean rodcheck[] = new boolean[3];
-    boolean isroding = false;
-    boolean isfishing = false;
-    Locale locale;
-    Thread t = null;
-    Random rand = new Random();
+    TextToSpeech tts;       // TTS 사용
+    MediaPlayer player;     // 배경음악을 담당하는 객체
+    Intent intent, intent2; // intent = LoadingActivity 에서 받은 인텐트, intent2 = TTS에 사용하는 RecognizerIntent
+    SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo; // m = 방향, m2 = 가속도 , rod1~3 = 왼,중,오른쪽 낚싯대, bupyo = 부표
+    SQLiteDatabase db;      // 물고기 정보 테이블 (이름 TEXT, 정보 TEXT)
+    String Wonju = "", wether = ""; // HTML Parsing에 사용하는 문자열
+    Handler h,h2;           // h = HTML Parsing 핸들러, h2 = 물고기 낚을 때 쓰는 Thread 핸들러
+    WorkerThread a;         // 물고기 낚을 때 쓰는 Thread
+    ImageView s;            // 배경화면 이미지 뷰
+    TextView quiz, answer;  // quiz = 물고기 낚았을 때 등장하는 TextView , answer = 퀴즈 맞힌 갯수
+    RelativeLayout quiz_back;   // 퀴즈 TextView(quiz)가 보이기 위한 Layout
+    long old=0;                 // 낚싯대가 들어올려질때의 텀 (0.5s)
+    int count=0;                // Thread 에서 사용하는 증감변수 = Random check와 매칭되는 순간 물고기가 낚인다는 판정
+    boolean flag = false;       // 낚싯대가 이미 들려있는지..
+    boolean rodcheck[] = new boolean[3];    // 어떤 낚싯대가 들려있는지..
+    boolean isroding = false;   // 들린 상태에선 더이상 안움직이게..
+    boolean isfishing = false;  // 낚는 중일때는 안움직이게..
+    Locale locale;              // TTS 언어설정을 위한 객체
+    Thread t = null;            // Thread
+    Random rand = new Random(); // 랜덤변수 생성 시 사용 (10~15초 랜덤변수, 0~4 DB 물고기 인덱스)
     int check;
     int query = rand.nextInt(5);
-    Cursor c;
-    String info="<문제> \n\n", fishname;
+    Cursor c;                   // RawQuery에 사용
+    String info="<문제> \n\n", fishname;  // info = 물고기 정보, fishname = 물고기 이름
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-        tts = new TextToSpeech(this, this);
+        tts = new TextToSpeech(this,this);
 
         player = MediaPlayer.create(this,R.raw.splash02);
         player.setLooping(true);
+        player.setVolume(0.2f,0.2f);
         player.start();
 
         for(int i=0; i<3; i++)
@@ -89,6 +91,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         bupyo = findViewById(R.id.iv6);
         quiz = findViewById(R.id.quiz);
         quiz_back = findViewById(R.id.quiz_back);
+        answer = findViewById(R.id.answer);
 
         h = new Handler() {
             public void handleMessage(Message msg) {
@@ -173,6 +176,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
         quiz.setVisibility(View.VISIBLE);
         quiz_back.setVisibility(View.VISIBLE);
+        info = "<문제>\n\n";
 
         c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 ",null);
         c.moveToPosition(query);
@@ -185,7 +189,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 try {
-                    player.pause();
+                    //player.pause();
                     intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                     startActivityForResult(intent2, 0);
                 } catch (Exception e)  {
@@ -195,12 +199,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         });
 
         // 나중에 다 초기화
-         isfishing = false;
-         flag = false;
-         isroding = false;
-         count = 0;
-         query = rand.nextInt(5);
-         check = rand.nextInt(6)+10;
+        isfishing = false;
+        flag = false;
+        isroding = false;
+        count = 0;
+        query = rand.nextInt(5);
+        check = rand.nextInt(6)+10;
     }
     void HTMLParsing() {
         try {
@@ -353,10 +357,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                    Message msg = new Message();
-                    msg.arg1 = count++;
-                    h2.sendMessage(msg);
-                }
+                Message msg = new Message();
+                msg.arg1 = count++;
+                h2.sendMessage(msg);
             }
         }
     }
+}

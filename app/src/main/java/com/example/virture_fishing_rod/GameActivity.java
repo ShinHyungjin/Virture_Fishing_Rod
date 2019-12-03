@@ -16,6 +16,8 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,14 +35,17 @@ import org.xml.sax.InputSource;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class GameActivity extends AppCompatActivity implements SensorEventListener {
+public class GameActivity extends AppCompatActivity implements SensorEventListener, TextToSpeech.OnInitListener {
+    TextToSpeech tts;
     MediaPlayer player;
-    Intent intent;
+    Intent intent, intent2;
     SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo;
     SQLiteDatabase db;
     String Wonju = "", wether = "";
@@ -54,6 +59,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     boolean rodcheck[] = new boolean[3];
     boolean isroding = false;
     boolean isfishing = false;
+    Locale locale;
     Thread t = null;
     Random rand = new Random();
     int check;
@@ -64,6 +70,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        tts = new TextToSpeech(this, this);
 
         player = MediaPlayer.create(this,R.raw.splash02);
         player.setLooping(true);
@@ -117,6 +125,47 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
         check = rand.nextInt(6)+10;
     }
+
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS)
+        {
+            locale = Locale.getDefault();
+            if(tts.isLanguageAvailable(locale) >= TextToSpeech.LANG_AVAILABLE)
+                tts.setLanguage(locale);
+            else
+                Toast.makeText(this, "지원하지 않는 언어 오류", Toast.LENGTH_SHORT).show();
+        }
+        else if( status == TextToSpeech.ERROR) {
+            Toast.makeText(this, "음성 합성 초기화 오류", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        if(tts != null)
+            tts.shutdown();
+    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        try {
+            if (requestCode == 0 && resultCode == RESULT_OK) {
+                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String str = result.get(0);
+                if (str.length() > 0 && str.equals(fishname)) {
+                    if (tts.isSpeaking())
+                        tts.stop();
+                    tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);
+                }
+                else {
+                    tts.speak("오답입니다! 정답은 " + fishname+ " 입니다.", TextToSpeech.QUEUE_FLUSH, null);
+                }
+            }
+        } catch (Exception e) {
+        }
+        quiz.setVisibility(View.INVISIBLE);
+        bupyo.setVisibility(View.INVISIBLE);
+        player.start();
+    }
+
     private void getfish() {
         Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
         quiz.setVisibility(View.VISIBLE);
@@ -131,15 +180,23 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         quiz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                try {
+                    player.pause();
+                    intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    startActivityForResult(intent2, 0);
+                } catch (Exception e)  {
+                    Toast.makeText(getApplicationContext(), "구글 앱이 설치되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
         // 나중에 다 초기화
-        // isfishing = false;
-        // flag = false;
-        // isroding = false;
-        // query = rand.nextInt(5);
+         isfishing = false;
+         flag = false;
+         isroding = false;
+         count = 0;
+         query = rand.nextInt(5);
+         check = rand.nextInt(6)+10;
     }
     void HTMLParsing() {
         try {

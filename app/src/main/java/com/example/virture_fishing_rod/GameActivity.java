@@ -38,7 +38,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class GameActivity extends AppCompatActivity implements SensorEventListener {
     MediaPlayer player;
     Intent intent;
-    SensorManager m; Sensor sen; ImageView rod1,rod2,rod3;
+    SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo;
     SQLiteDatabase db;
     String Wonju = "", wether = "";
     Handler h;
@@ -57,6 +57,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         rod1 = findViewById(R.id.iv3);
         rod2 = findViewById(R.id.iv4);
         rod3 = findViewById(R.id.iv5);
+        bupyo = findViewById(R.id.iv6);
 
         h = new Handler() {
             public void handleMessage(Message msg) {
@@ -68,11 +69,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         m = (SensorManager) getSystemService(SENSOR_SERVICE);
         sen = m.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+
+        m2 = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sen2 = m2.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
         if(sen==null){
             Toast.makeText(this,"방향센서 없음->프로그램 종료",Toast.LENGTH_LONG).show();
             finish();
         }
         m.registerListener(this,sen,SensorManager.SENSOR_DELAY_UI);
+        m2.registerListener(this,sen2,SensorManager.SENSOR_DELAY_UI);
 
         dbHelper helper = new dbHelper(this);
         if(db == null) {
@@ -95,7 +101,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             int end = wether.indexOf("어제보다");
             wether = wether.substring(start + 13, end-2);
             GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-            if(wether.equals("맑음") || wether.equals("눈"))
+            if(wether.equals("흐림") || wether.equals("눈"))
                 Glide.with(this).load(R.drawable.raining).into(gif);
             else
                 Glide.with(this).load(R.drawable.ocean).into(gif);
@@ -171,6 +177,18 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             rod1.invalidate();
             rod2.invalidate();
             rod3.invalidate();
+        }
+        else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float value = (event.values[0]*event.values[0]) + (event.values[1]*event.values[1]) + (event.values[2]*event.values[2]);
+            /*long time = System.currentTimeMillis();
+            long gap = (time - old);
+            if(gap > 1000) {
+               old = time;*/
+                if(value > 200) {
+                    GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);
+                    Glide.with(this).load(R.drawable.bupyo).into(bupyo1);
+                    bupyo.setVisibility(View.VISIBLE);
+            }
         }
     }
 }

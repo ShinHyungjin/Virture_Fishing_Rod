@@ -46,6 +46,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     long old=0;
     boolean flag = false;
     boolean rodcheck[] = new boolean[3];
+    boolean isroding = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,7 +163,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ORIENTATION){
             float roll = event.values[2];
-            if(roll >= 20) {
+            if(roll >= 20 && isroding == false) {
                 GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
                 Glide.with(this).load(R.drawable.exrod).into(png2);
                 rod2.setVisibility(View.VISIBLE);
@@ -171,7 +172,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 rodcheck[0] = false;
                 rodcheck[1] = true;
                 rodcheck[2] = false;
-            }else if(roll<-20){
+            }else if(roll<-20 && isroding == false){
                 GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
                 Glide.with(this).load(R.drawable.exrod).into(png3);
                 rod3.setVisibility(View.VISIBLE);
@@ -182,12 +183,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 rodcheck[2] = true;
 
             }else{
-                rod1.setVisibility(View.VISIBLE);
-                rod2.setVisibility(View.INVISIBLE);
-                rod3.setVisibility(View.INVISIBLE);
-                rodcheck[0] = true;
-                rodcheck[1] = false;
-                rodcheck[2] = false;
+                if(isroding == false) {
+                    rod1.setVisibility(View.VISIBLE);
+                    rod2.setVisibility(View.INVISIBLE);
+                    rod3.setVisibility(View.INVISIBLE);
+                    rodcheck[0] = true;
+                    rodcheck[1] = false;
+                    rodcheck[2] = false;
+                }
             }
             rod1.invalidate();
             rod2.invalidate();
@@ -215,6 +218,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                         }
                     }
                     flag = true;
+                    isroding = true;
                 }
                 if (value > 400 && flag == true) {
                     GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);

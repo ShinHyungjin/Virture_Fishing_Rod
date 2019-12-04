@@ -1,5 +1,6 @@
 package com.example.virture_fishing_rod;
 
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -40,23 +41,27 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     SensorManager m,m2; Sensor sen,sen2; ImageView rod1,rod2,rod3,bupyo; // m = 방향, m2 = 가속도 , rod1~3 = 왼,중,오른쪽 낚싯대, bupyo = 부표
     SQLiteDatabase db;      // 물고기 정보 테이블 (이름 TEXT, 정보 TEXT)
     String Wonju = "", wether = ""; // HTML Parsing에 사용하는 문자열
-    Handler h,h2;           // h = HTML Parsing 핸들러, h2 = 물고기 낚을 때 쓰는 Thread 핸들러
+    Handler h,h2,h3;           // h = HTML Parsing 핸들러, h2 = 물고기 낚을 때 쓰는 Thread 핸들러, h3 = 배경음악, fishImage 컨트롤 핸들러
     WorkerThread a;         // 물고기 낚을 때 쓰는 Thread
     ImageView s, fish;            // 배경화면 이미지 뷰, 물고기 이미지 뷰
     TextView quiz, answer;  // quiz = 물고기 낚았을 때 등장하는 TextView , answer = 퀴즈 맞힌 갯수
     RelativeLayout quiz_back;   // 퀴즈 TextView(quiz)가 보이기 위한 Layout
     long old=0;                 // 낚싯대가 들어올려질때의 텀 (0.5s)
     int count=0;                // Thread 에서 사용하는 증감변수 = Random check와 매칭되는 순간 물고기가 낚인다는 판정
+    int bgcount=0, fishcount=0; // 정답이면 bgcount가 1이면 다시실행, 오답이면 3이면 다시실행, fishcount는 2이면 INVISIBLE
     boolean flag = false;       // 낚싯대가 이미 들려있는지..
     boolean rodcheck[] = new boolean[3];    // 어떤 낚싯대가 들려있는지..
     boolean isroding = false;   // 들린 상태에선 더이상 안움직이게..
     boolean isfishing = false;  // 낚는 중일때는 안움직이게..
+    boolean iscorrect = false;  // 정답인지.. = 정답 쓰레드 실행
+    boolean iswrong = false;    // 오답인지.. = 오답 쓰레드 실행
+    boolean isquizing = false;  // 퀴즈 푸는중이면 쓰레드가 멈추게..
     Locale locale;              // TTS 언어설정을 위한 객체
-    Thread t = null;            // Thread
+    Thread t = null, t2 = null; // t = 10~15초 쓰레드, t2 = fishImage, 배경음악 컨트롤 쓰레드
     Random rand = new Random(); // 랜덤변수 생성 시 사용 (10~15초 랜덤변수, 0~4 DB 물고기 인덱스)
-    int check;
-    int score = 0;              //점수
-    int query = rand.nextInt(5);
+    int check;                  // 10~15초 랜덤변수
+    int query = rand.nextInt(5); // 0~4 DB 물고기 인덱스
+    int score = 0;              // 점수
     Cursor c;                   // RawQuery에 사용
     String info="<문제> \n\n", fishname;  // info = 물고기 정보, fishname = 물고기 이름
     @Override
@@ -153,22 +158,57 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 if (str.length() > 0 && str.equals(fishname)) {
                     if (tts.isSpeaking())
                         tts.stop();
-                    tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);
+                    tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);    // 정답이면 200점 추가
                     score += 200;
                     answer.setText("SCORE : "+score);
-                    GlideDrawableImageViewTarget f = new GlideDrawableImageViewTarget(fish);
+                    GlideDrawableImageViewTarget f = new GlideDrawableImageViewTarget(fish); // 물고기 이미지 보여짐
                     Glide.with(this).load(R.drawable.godung).into(f);
                     fish.setVisibility(View.VISIBLE);
+                    iscorrect = true;  // 정답 쓰레드 실행
+                    t2 = new Thread(new t2());
+
+                    t2.start();
+
+                    h3 = new Handler() {
+                        public void handleMessage(Message msg) {
+                            int bg = msg.arg1;
+                            int fc = msg.arg2;
+                            if(bg == 1) {    // 정답이면 TTS가 짧아서 1초만에 BGM 실행
+                                player.start();
+                            }
+                            if(fc >= 2) {   // 2초뒤에 물고기 이미지 가림
+                                fish.setVisibility(View.INVISIBLE);
+                                iscorrect = false;
+                            }
+                        }
+                    };
                 }
                 else {
                     tts.speak("오답입니다! 정답은 " + fishname+ " 입니다.", TextToSpeech.QUEUE_FLUSH, null);
-                    score -= 150;
+                    score -= 150;       // 오답이면 150점 까임
                     answer.setText("SCORE : "+score);
+
+                    iswrong = true;     // 오답 쓰레드 실행
+                    t2 = new Thread(new t2());
+
+                    t2.start();
+
+                    h3 = new Handler() {
+                        public void handleMessage(Message msg) {
+                            int bg = msg.arg1;
+                            if(bg >= 3) {   // 오답은 TTS가 길어서 3초뒤에 BGM 실행
+                                player.start();
+                                iswrong = false;
+                            }
+                        }
+                    };
+
                 }
             }
-            isfishing = false;
+            isfishing = false;  // TTS 수행 후 초기화 되어야 할 변수들 (위치이동 가능, 준비자세 가능, 퀴즈풀기 가능 등..)
             flag = false;
             isroding = false;
+            isquizing = false;
         } catch (Exception e) {
         }
         quiz.setVisibility(View.INVISIBLE); //물고기를 맞췄던 못맞췄던 문제,부표를 가림
@@ -193,7 +233,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 try {
-                    //player.pause();
+                    player.pause(); // 문제 클릭시 TTS가 실행되고 BGM 일시중지
                     intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); // TTS 실행
                     startActivityForResult(intent2, 0);
                 } catch (Exception e)  {
@@ -202,11 +242,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // 낚인 물고기를 맞췄던 못맞췄던 수행되는 초기화들...위치변경가능, 준비자세가능, 10~15초 초기화, 0~4 초기화, Thread Count 초기화
+        // 낚인 물고기를 맞췄던 못맞췄던 수행되는 초기화들...위치변경가능, 준비자세가능, 10~15초 초기화, 0~4 초기화, Thread Count 초기화, 퀴즈풀기 가능
 
         count = 0;
         query = rand.nextInt(5);
         check = rand.nextInt(6)+10;
+        isquizing = true;
     }
     void HTMLParsing() {    // URL을 통해 얻어온 원주 날씨는 파싱...
         try {
@@ -336,14 +377,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     rod3.setRotation(0.0f);
                     isfishing = true; // 던진 상태 표시
 
+                    bgcount = 0;    // bg 시간 초기화
+                    fishcount=0;    // 물고기 보여짐 시간 초기화
+
                     t = new Thread(new t()); // 부표가 떳으니 10~15초 랜덤변수를 1초마다 검사하는 쓰레드 시작
                     t.start();
 
                     h2 = new Handler() {
                         public void handleMessage(Message msg) {
                             int sec = msg.arg1;
-                            if(sec == check) {
-                                getfish();
+                            if(sec == check) {  // 쓰레드 타임과 랜덤변수와 같은가? (10~15초가 흘렀냐)
+                                getfish();  // 물고기가 잡혔으니 잡힘 함수 호출
                             }
                         }
                     };
@@ -353,7 +397,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     }
     class t implements Runnable {
         public void run() {
-            while(isfishing) {
+            while(isfishing && !isquizing) {    // 잡는중이면서 퀴즈 푸는중이 아닐때만 쓰레드가 돌게 하기 위함 (없다면 퀴즈가 자꾸 바뀜)
                 try {
                     Thread.sleep(1000);   // 0.01초
                 } catch (InterruptedException e) {
@@ -362,6 +406,35 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 Message msg = new Message();
                 msg.arg1 = count++;
                 h2.sendMessage(msg);
+            }
+        }
+    }
+    class t2 implements Runnable {
+        public void run() {
+            if(iscorrect) {     // 정답인 쓰레드
+                while (iscorrect) {
+                    try {
+                        Thread.sleep(1000);   // 0.01초
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Message msg = new Message();
+                    msg.arg1 = ++bgcount;       // bg는 1초면 재시작
+                    msg.arg2 = ++fishcount;     // fish는 2초면 가려짐
+                    h3.sendMessage(msg);
+                }
+            }
+            else if(iswrong) {  // 오답인 쓰레드
+                while (iswrong) {
+                    try {
+                        Thread.sleep(1000);   // 0.01초
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Message msg = new Message();
+                    msg.arg1 = ++bgcount;   // 오답은 bg만 3초뒤에 재시작
+                    h3.sendMessage(msg);
+                }
             }
         }
     }

@@ -42,7 +42,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     String Wonju = "", wether = ""; // HTML Parsing에 사용하는 문자열
     Handler h,h2;           // h = HTML Parsing 핸들러, h2 = 물고기 낚을 때 쓰는 Thread 핸들러
     WorkerThread a;         // 물고기 낚을 때 쓰는 Thread
-    ImageView s;            // 배경화면 이미지 뷰
+    ImageView s, fish;            // 배경화면 이미지 뷰, 물고기 이미지 뷰
     TextView quiz, answer;  // quiz = 물고기 낚았을 때 등장하는 TextView , answer = 퀴즈 맞힌 갯수
     RelativeLayout quiz_back;   // 퀴즈 TextView(quiz)가 보이기 위한 Layout
     long old=0;                 // 낚싯대가 들어올려질때의 텀 (0.5s)
@@ -81,6 +81,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         quiz = findViewById(R.id.quiz); // 물고기를 낚았을 때 나오는 문제 TextView
         quiz_back = findViewById(R.id.quiz_back);   // TextView 를 꾸미는 뒷 백그라운드 네모 박스
         answer = findViewById(R.id.answer); // 맞힌 갯수의 TextView
+        fish = findViewById(R.id.fish);
 
         h = new Handler() {                     // 원주 날씨를 URL을 통해 얻어오고 파싱한다
             public void handleMessage(Message msg) {
@@ -155,6 +156,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);
                     score += 200;
                     answer.setText("SCORE : "+score);
+                    GlideDrawableImageViewTarget f = new GlideDrawableImageViewTarget(fish);
+                    Glide.with(this).load(R.drawable.godung).into(f);
+                    fish.setVisibility(View.VISIBLE);
                 }
                 else {
                     tts.speak("오답입니다! 정답은 " + fishname+ " 입니다.", TextToSpeech.QUEUE_FLUSH, null);

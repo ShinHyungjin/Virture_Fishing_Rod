@@ -124,7 +124,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         check = rand.nextInt(6)+10; // 10~15초 사이에 물고기가 낚이게 끔 랜덤변수 선언
     }
 
-    public void onInit(int status) {      // TTS 초기화
+    public void onInit(int status) {      // TTS를 초기화 함
         if (status == TextToSpeech.SUCCESS)
         {
             locale = Locale.getDefault();

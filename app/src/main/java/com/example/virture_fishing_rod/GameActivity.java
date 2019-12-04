@@ -55,7 +55,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Thread t = null;            // Thread
     Random rand = new Random(); // 랜덤변수 생성 시 사용 (10~15초 랜덤변수, 0~4 DB 물고기 인덱스)
     int check;
-    int score = 0;
+    int score = 0;              //점수
     int query = rand.nextInt(5);
     Cursor c;                   // RawQuery에 사용
     String info="<문제> \n\n", fishname;  // info = 물고기 정보, fishname = 물고기 이름
@@ -162,6 +162,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     answer.setText("SCORE : "+score);
                 }
             }
+            isfishing = false;
+            flag = false;
+            isroding = false;
         } catch (Exception e) {
         }
         quiz.setVisibility(View.INVISIBLE); //물고기를 맞췄던 못맞췄던 문제,부표를 가림
@@ -196,9 +199,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         });
 
         // 낚인 물고기를 맞췄던 못맞췄던 수행되는 초기화들...위치변경가능, 준비자세가능, 10~15초 초기화, 0~4 초기화, Thread Count 초기화
-        isfishing = false;
-        flag = false;
-        isroding = false;
+
         count = 0;
         query = rand.nextInt(5);
         check = rand.nextInt(6)+10;
@@ -214,7 +215,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             else
                 Glide.with(this).load(R.drawable.ocean).into(gif);
             GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1); // 중앙 낚싯대 출력
-            Glide.with(this).load(R.drawable.exrod).into(png1);
+            Glide.with(this).load(R.drawable.exrod_right).into(png1);
 
         } catch (Exception e) { Toast.makeText(getApplicationContext(), "파싱에러",Toast.LENGTH_SHORT).show(); }
     }
@@ -267,7 +268,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             float roll = event.values[2]; // y축인 roll로 좌,우 방향전환을 수행함
             if(roll >= 20 && isroding == false) { // 20보다 크다? 양수이니 왼쪽이다.
                 GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
-                Glide.with(this).load(R.drawable.exrod).into(png2);
+                Glide.with(this).load(R.drawable.exrod_left).into(png2);
                 rod2.setVisibility(View.VISIBLE); // 왼쪽낚싯대 보임
                 rod1.setVisibility(View.INVISIBLE); // 그 외 중앙, 오른쪽 낚싯대 가림
                 rod3.setVisibility(View.INVISIBLE);
@@ -276,7 +277,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 rodcheck[2] = false;
             }else if(roll<-20 && isroding == false){ // -20보다 작다? 오른쪽
                 GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
-                Glide.with(this).load(R.drawable.exrod).into(png3);
+                Glide.with(this).load(R.drawable.exrod_right).into(png3);
                 rod3.setVisibility(View.VISIBLE); // 오른쪽 낚싯대 보임
                 rod1.setVisibility(View.INVISIBLE); // 그 외 왼쪽, 중앙 낚싯대 가림
                 rod2.setVisibility(View.INVISIBLE);
@@ -311,7 +312,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                             rod1.setRotation(30.0f);
                             break;
                         } else if (rodcheck[i] == true && i == 1) {
-                            rod2.setRotation(30.0f);
+                            rod2.setRotation(-30.0f);
                             break;
                         } else if (rodcheck[i] == true && i == 2) {
                             rod3.setRotation(30.0f);

@@ -209,7 +209,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             int end = wether.indexOf("어제보다");
             wether = wether.substring(start + 13, end-2);  // 맑음, 흐림, 눈, 비 등을 뽑아오게 된다.
             GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-            if(wether.equals("흐림") || wether.equals("눈"))  // 날씨에 따른 배경화면을 바꿈 (게임화면으로 진입시에만)
+            if(wether.equals("비") || wether.equals("눈") || wether.equals("흐림"))  // 날씨에 따른 배경화면을 바꿈 (게임화면으로 진입시에만)
                 Glide.with(this).load(R.drawable.raining).into(gif);
             else
                 Glide.with(this).load(R.drawable.ocean).into(gif);

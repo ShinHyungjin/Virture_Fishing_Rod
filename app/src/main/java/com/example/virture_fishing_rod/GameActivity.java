@@ -1,6 +1,5 @@
 package com.example.virture_fishing_rod;
 
-import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -27,22 +26,12 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 public class GameActivity extends AppCompatActivity implements SensorEventListener, TextToSpeech.OnInitListener {
     TextToSpeech tts;       // TTS 사용
@@ -72,28 +61,27 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
+        setContentView(R.layout.activity_game); // 앱 실행시 첫 화면은 activity_loading.xml 이다 (Manifests file에 정의됨)
 
-        tts = new TextToSpeech(this,this);
+        tts = new TextToSpeech(this,this);  // TTS 사용
 
-        player = MediaPlayer.create(this,R.raw.splash02);
-        player.setLooping(true);
-        player.setVolume(0.2f,0.2f);
-        player.start();
+        player = MediaPlayer.create(this,R.raw.splash02);   // 배경음 사용
+        player.setLooping(true);                                   // 무한 루핑
+        player.start();                                            // 화면 전환시 바로 배경음악 실행
 
         for(int i=0; i<3; i++)
-            rodcheck[i] = false;
+            rodcheck[i] = false;                                   // 낚싯대(rod1~3)의 체크사항을 알 수 있음
 
-        s = findViewById(R.id.iv2);
-        rod1 = findViewById(R.id.iv3);
-        rod2 = findViewById(R.id.iv4);
-        rod3 = findViewById(R.id.iv5);
-        bupyo = findViewById(R.id.iv6);
-        quiz = findViewById(R.id.quiz);
-        quiz_back = findViewById(R.id.quiz_back);
-        answer = findViewById(R.id.answer);
+        s = findViewById(R.id.iv2);     // 배경화면
+        rod1 = findViewById(R.id.iv3);  // 중앙 낚싯대
+        rod2 = findViewById(R.id.iv4);  // 왼쪽 낚싯대
+        rod3 = findViewById(R.id.iv5);  // 오른쪽 낚싯대
+        bupyo = findViewById(R.id.iv6); // 중앙 부표
+        quiz = findViewById(R.id.quiz); // 물고기를 낚았을 때 나오는 문제 TextView
+        quiz_back = findViewById(R.id.quiz_back);   // TextView 를 꾸미는 뒷 백그라운드 네모 박스
+        answer = findViewById(R.id.answer); // 맞힌 갯수의 TextView
 
-        h = new Handler() {
+        h = new Handler() {                     // 원주 날씨를 URL을 통해 얻어오고 파싱한다
             public void handleMessage(Message msg) {
                 HTMLParsing();
             }
@@ -101,22 +89,26 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         a = new WorkerThread(h);
         a.start();
 
-        m = (SensorManager) getSystemService(SENSOR_SERVICE);
+        m = (SensorManager) getSystemService(SENSOR_SERVICE);   // 방향센서
         sen = m.getDefaultSensor(Sensor.TYPE_ORIENTATION);
 
-        m2 = (SensorManager) getSystemService(SENSOR_SERVICE);
+        m2 = (SensorManager) getSystemService(SENSOR_SERVICE);  // 가속도 센서
         sen2 = m2.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         if(sen==null){
             Toast.makeText(this,"방향센서 없음->프로그램 종료",Toast.LENGTH_LONG).show();
             finish();
         }
+        if(sen2==null){
+            Toast.makeText(this,"가속도센서 없음->프로그램 종료",Toast.LENGTH_LONG).show();
+            finish();
+        }
         m.registerListener(this,sen,SensorManager.SENSOR_DELAY_UI);
         m2.registerListener(this,sen2,SensorManager.SENSOR_DELAY_UI);
 
-        dbHelper helper = new dbHelper(this);
+        dbHelper helper = new dbHelper(this);   // DBHelper 클래스를 정의하여 SQLite DB를 만든다
 
-        if(db == null) {
+        if(db == null) {        // 5마리 물고기 정보 삽입
             db = helper.getWritableDatabase();
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "가다랑어" + "','" + "고등어과의 어류 가운데 소형 종에 속한다. 몸은 굵고 통통한 방추형임" +
                     " 등은 청흑색, 배는 광택을 띤 은백색이고 그 위에 4~10줄의 검은 세로띠가 있는 것이 특징이다." + "')");
@@ -129,10 +121,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             db.execSQL("INSERT INTO 물고기 VALUES ('" + "대구" + "','" + "먹성이 대단한 포식성 어류로서, 입과 머리가 크다 해서 ㅁㅁ로 불리우는 한류성 어종이다." +
                     "뒷지느러미는 두 개로 검고, 등지느러미는 세 개로 넓게 퍼져 있으며 가슴지느러미와 함께 노란색을 띤다." + "')");
         }
-        check = rand.nextInt(6)+10;
+        check = rand.nextInt(6)+10; // 10~15초 사이에 물고기가 낚이게 끔 랜덤변수 선언
     }
 
-    public void onInit(int status) {
+    public void onInit(int status) {      // TTS 초기화
         if (status == TextToSpeech.SUCCESS)
         {
             locale = Locale.getDefault();
@@ -152,7 +144,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             tts.shutdown();
     }
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        try {
+        try {   // TTS를 통해 음성인식을 하면, 녹은된 것이 문자열로 저장되고, 그것과 DB에 있는 물고기 이름과 매칭되는지 비교
             if (requestCode == 0 && resultCode == RESULT_OK) {
                 ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 String str = result.get(0);
@@ -167,30 +159,30 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             }
         } catch (Exception e) {
         }
-        quiz.setVisibility(View.INVISIBLE);
+        quiz.setVisibility(View.INVISIBLE); //물고기를 맞췄던 못맞췄던 문제,부표를 가림
         bupyo.setVisibility(View.INVISIBLE);
         quiz_back.setVisibility(View.INVISIBLE);
     }
 
-    private void getfish() {
-        Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
-        quiz.setVisibility(View.VISIBLE);
-        quiz_back.setVisibility(View.VISIBLE);
-        info = "<문제>\n\n";
+    private void getfish() {    // 10~15초 사이에 물고기가 낚이면 수행되는 함수
+        // Toast.makeText(getApplicationContext(), "랜덤시간 = " + count, Toast.LENGTH_SHORT).show();
+        quiz.setVisibility(View.VISIBLE);   // 문제 TextView 출력
+        quiz_back.setVisibility(View.VISIBLE);  // 문제 TextView 백그라운드 출력
+        info = "<문제>\n\n";  // < 문제 > \N\N 이 물고기는 ..~
 
-        c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 ",null);
-        c.moveToPosition(query);
-        info += c.getString(0);
-        fishname = c.getString(1);
+        c = db.rawQuery("SELECT 정보, 이름 FROM 물고기 ",null); // Cursor를 통해 DB접근
+        c.moveToPosition(query);    // 0~4 랜덤변수를 통해 DB의 물고기 5마리 중 하나를 랜덤선택
+        info += c.getString(0); // < 문제 > + 물고기정보가 문제로 나옴
+        fishname = c.getString(1);  // 물고기 이름도 필요함
 
-        quiz.setText(info);
+        quiz.setText(info); // TextView에 문제 출력
 
-        quiz.setOnClickListener(new View.OnClickListener() {
+        quiz.setOnClickListener(new View.OnClickListener() { // 문제 TextView 클릭시 수행되는 함수
             @Override
             public void onClick(View v) {
                 try {
                     //player.pause();
-                    intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent2 = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); // TTS 실행
                     startActivityForResult(intent2, 0);
                 } catch (Exception e)  {
                     Toast.makeText(getApplicationContext(), "구글 앱이 설치되지 않았습니다.", Toast.LENGTH_SHORT).show();
@@ -198,7 +190,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // 나중에 다 초기화
+        // 낚인 물고기를 맞췄던 못맞췄던 수행되는 초기화들...위치변경가능, 준비자세가능, 10~15초 초기화, 0~4 초기화, Thread Count 초기화
         isfishing = false;
         flag = false;
         isroding = false;
@@ -206,17 +198,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         query = rand.nextInt(5);
         check = rand.nextInt(6)+10;
     }
-    void HTMLParsing() {
+    void HTMLParsing() {    // URL을 통해 얻어온 원주 날씨는 파싱...
         try {
             int start = wether.indexOf("class=\"main\"");
             int end = wether.indexOf("어제보다");
-            wether = wether.substring(start + 13, end-2);
+            wether = wether.substring(start + 13, end-2);  // 맑음, 흐림, 눈, 비 등을 뽑아오게 된다.
             GlideDrawableImageViewTarget gif = new GlideDrawableImageViewTarget(s);
-            if(wether.equals("흐림") || wether.equals("눈"))
+            if(wether.equals("흐림") || wether.equals("눈"))  // 날씨에 따른 배경화면을 바꿈 (게임화면으로 진입시에만)
                 Glide.with(this).load(R.drawable.raining).into(gif);
             else
                 Glide.with(this).load(R.drawable.ocean).into(gif);
-            GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1);
+            GlideDrawableImageViewTarget png1 = new GlideDrawableImageViewTarget(rod1); // 중앙 낚싯대 출력
             Glide.with(this).load(R.drawable.exrod).into(png1);
 
         } catch (Exception e) { Toast.makeText(getApplicationContext(), "파싱에러",Toast.LENGTH_SHORT).show(); }
@@ -228,7 +220,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             this.h = h;
         }
         public void run() {
-            try {
+            try {  // 네이버 원주날씨 홈페이지에서 얻어옴
                 URL url = new URL("https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EC%9B%90%EC%A3%BC%EB%82%A0%EC%94%A8");
                 BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
                 while ((Wonju = in.readLine()) != null)
@@ -243,12 +235,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    class dbHelper extends SQLiteOpenHelper {
+    class dbHelper extends SQLiteOpenHelper { // fish.db 생성
         public dbHelper(Context context) {
             super(context, "fish.db", null, 1);
         }
 
-        public void onCreate(SQLiteDatabase db) {
+        public void onCreate(SQLiteDatabase db) { // fish.db는 물고기 TABLE에 이름(TEXT), 정보(TEXT)
             db.execSQL("CREATE TABLE 물고기 (이름 TEXT, 정보 TEXT);");
         }
 
@@ -257,7 +249,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             onCreate(db);
         }
     }
-    public void onBackPressed(){
+    public void onBackPressed(){    // 핸드폰의 뒤로가기 버튼 클릭시 이전 화면인 Loading 화면으로 전환되며 그때는 노래멈춤
         player.stop();
         intent = new Intent(GameActivity.this, LoadingActivity.class);
         startActivity(intent);
@@ -265,23 +257,23 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
     @Override
-    public void onSensorChanged(SensorEvent event) {
+    public void onSensorChanged(SensorEvent event) { // 방향센서 값 변경시 수행되는 함수
         if (event.sensor.getType() == Sensor.TYPE_ORIENTATION){
-            float roll = event.values[2];
-            if(roll >= 20 && isroding == false) {
+            float roll = event.values[2]; // y축인 roll로 좌,우 방향전환을 수행함
+            if(roll >= 20 && isroding == false) { // 20보다 크다? 양수이니 왼쪽이다.
                 GlideDrawableImageViewTarget png2 = new GlideDrawableImageViewTarget(rod2);
                 Glide.with(this).load(R.drawable.exrod).into(png2);
-                rod2.setVisibility(View.VISIBLE);
-                rod1.setVisibility(View.INVISIBLE);
+                rod2.setVisibility(View.VISIBLE); // 왼쪽낚싯대 보임
+                rod1.setVisibility(View.INVISIBLE); // 그 외 중앙, 오른쪽 낚싯대 가림
                 rod3.setVisibility(View.INVISIBLE);
                 rodcheck[0] = false;
-                rodcheck[1] = true;
+                rodcheck[1] = true; // 왼쪽 낚싯대 체크
                 rodcheck[2] = false;
-            }else if(roll<-20 && isroding == false){
+            }else if(roll<-20 && isroding == false){ // -20보다 작다? 오른쪽
                 GlideDrawableImageViewTarget png3 = new GlideDrawableImageViewTarget(rod3);
                 Glide.with(this).load(R.drawable.exrod).into(png3);
-                rod3.setVisibility(View.VISIBLE);
-                rod1.setVisibility(View.INVISIBLE);
+                rod3.setVisibility(View.VISIBLE); // 오른쪽 낚싯대 보임
+                rod1.setVisibility(View.INVISIBLE); // 그 외 왼쪽, 중앙 낚싯대 가림
                 rod2.setVisibility(View.INVISIBLE);
                 rodcheck[0] = false;
                 rodcheck[1] = false;
@@ -301,16 +293,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             rod2.invalidate();
             rod3.invalidate();
         }
-        else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) { // 가속도센서 값 변경시 수행되는 함수
             float value = (event.values[0]*event.values[0]) + (event.values[1]*event.values[1]) + (event.values[2]*event.values[2]);
             long time = System.currentTimeMillis();
             long gap = (time - old);
-            if(gap > 500) {
+            if(gap > 500) { // 0.5초 보다 빨리 센서값 변경시 아무일도 안하게끔... (만보기처럼 한번 흔들때 한번만 변경되는 느낌)
                 old = time;
-                if (value > 200 && flag == false && isfishing == false) {
-                    bupyo.setVisibility(View.INVISIBLE);
+                if (value > 200 && flag == false && isfishing == false) { // 낚싯대를 던질 준비가 되었느냐~
+                    bupyo.setVisibility(View.INVISIBLE); // 부표 가림
                     for (int i = 0; i < 3; i++) {
-                        if (rodcheck[i] == true && i == 0) {
+                        if (rodcheck[i] == true && i == 0) { // 어느 낚싯대가 체크되있는지 검사 후 그 낚싯대를 회전시켜 던지는 모션처럼 효과
                             rod1.setRotation(30.0f);
                             break;
                         } else if (rodcheck[i] == true && i == 1) {
@@ -321,20 +313,20 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                             break;
                         }
                     }
-                    count=0;
-                    flag = true;
-                    isroding = true;
+                    count=0; // Count 초기화
+                    flag = true; // 준비자세임을 알림
+                    isroding = true; // 준비자세일때는 위치전환 불가능하게
                 }
-                else if (value > 400 && flag == true) {
+                else if (value > 400 && flag == true) {  // 준비자세에서 던지는 모션시 = 가속도 400 이상의 힘으로
                     GlideDrawableImageViewTarget bupyo1 = new GlideDrawableImageViewTarget(bupyo);
                     Glide.with(this).load(R.drawable.bupyo1).into(bupyo1);
-                    bupyo.setVisibility(View.VISIBLE);
-                    rod1.setRotation(0.0f);
+                    bupyo.setVisibility(View.VISIBLE); // 부표 보임
+                    rod1.setRotation(0.0f); // 회전값 다시 초기화
                     rod2.setRotation(0.0f);
                     rod3.setRotation(0.0f);
-                    isfishing = true;
+                    isfishing = true; // 던진 상태 표시
 
-                    t = new Thread(new t());
+                    t = new Thread(new t()); // 부표가 떳으니 10~15초 랜덤변수를 1초마다 검사하는 쓰레드 시작
                     t.start();
 
                     h2 = new Handler() {

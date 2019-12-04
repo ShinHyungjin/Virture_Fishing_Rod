@@ -55,6 +55,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Thread t = null;            // Thread
     Random rand = new Random(); // 랜덤변수 생성 시 사용 (10~15초 랜덤변수, 0~4 DB 물고기 인덱스)
     int check;
+    int score = 0;
     int query = rand.nextInt(5);
     Cursor c;                   // RawQuery에 사용
     String info="<문제> \n\n", fishname;  // info = 물고기 정보, fishname = 물고기 이름
@@ -152,9 +153,13 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                     if (tts.isSpeaking())
                         tts.stop();
                     tts.speak("정답입니다!", TextToSpeech.QUEUE_FLUSH, null);
+                    score += 200;
+                    answer.setText("SCORE : "+score);
                 }
                 else {
                     tts.speak("오답입니다! 정답은 " + fishname+ " 입니다.", TextToSpeech.QUEUE_FLUSH, null);
+                    score -= 150;
+                    answer.setText("SCORE : "+score);
                 }
             }
         } catch (Exception e) {
